@@ -1,0 +1,98 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:sec="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="
+      http://www.springframework.org/schema/security
+      http://www.springframework.org/schema/security/spring-security-4.0.xsd
+      http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+	<!-- importar el archivo de contexto de la librería de seguridad -->
+	<!-- <beans:import -->
+	<!-- resource="classpath:AccesoSeguridadStatefulContext.xml" /> -->
+
+
+
+
+	<sec:http auto-config="false" use-expressions="true"
+		entry-point-ref="accesoAuthenticationProcessingEntryPoint">
+		<!-- se ejecuta al intentar acceder a un recurso sin los roles necesarios, 
+			pero logeado -->
+		<access-denied-handler ref="customerAccessDeniedHandler" />
+
+		<!-- csrf disable ver si se implementa -->
+		<sec:custom-filter ref="accesoStatefulAuthenticationFilter"
+			position="FORM_LOGIN_FILTER" />
+
+		<!-- <sec:access-denied-handler ref="authenticationAccessDeniedHandler" 
+			/> -->
+		<intercept-url pattern="/jsp/login.jsp" access="hasRole('ANONYMOUS')" />
+		<sec:intercept-url pattern="/noticiaAdmin/**"
+			access="hasRole('ROLE_ADMIN')" />
+		<sec:intercept-url pattern="/noticiaAsistente/**"
+			access="hasRole('ROLE_ADMIN') or hasRole('ROLE_ASISTENTE')" />
+		<sec:intercept-url pattern="/noticiaConductor/**"
+			access="hasRole('ROLE_CONDUCTOR')" />
+
+		<sec:intercept-url pattern="/jsp/home.jsp"
+			access="hasRole('ROLE_ASISTENTE')" />
+
+		<sec:intercept-url pattern="/jsp/admin.jsp" access="hasRole('ROLE_ADMIN')" />
+	</sec:http>
+
+	<beans:bean id="authenticationManager"
+		class="org.springframework.security.authentication.ProviderManager">
+		<beans:constructor-arg>
+			<beans:list>
+				<beans:ref bean="defaultAccesoAuthenticationProvider" />
+			</beans:list>
+		</beans:constructor-arg>
+	</beans:bean>
+
+	<beans:bean id="defaultAccesoAuthenticationProvider"
+		class="com.fac.seguridad.accesoseguridadstateful.provider.DefaultAccesoAuthenticationProvider" />
+
+	<beans:bean id="accesoAuthenticationProcessingEntryPoint"
+		class="com.fac.seguridad.accesoseguridadstateful.entrypoint.AccesoAuthenticationProcessingEntryPoint">
+		<beans:constructor-arg type="java.lang.String"
+			value="/jsp/login.jsp" />
+	</beans:bean>
+
+	<beans:bean id="accesoStatefulAuthenticationFilter"
+		class="com.fac.seguridad.accesoseguridadstateful.filter.AccesoUsernamePasswordAuthenticationFilter">
+		<beans:property name="authenticationManager" ref="authenticationManager" />
+		<beans:property name="authenticationSuccessHandler"
+			ref="customAuthenticationSuccessHandler" />
+
+		<beans:property name="AuthenticationFailureHandler"
+			ref="customAuthenticationFailureHandler" />
+
+	</beans:bean>
+
+	<beans:bean id="defaultAccesoUserDetailsServiceImp"
+		class="com.fac.seguridad.accesoseguridadstateful.service.DefaultAccesoUserDetailsServiceImp" />
+
+
+	<beans:bean id="customAuthenticationSuccessHandler"
+		class="com.fac.seguridad.appweb.seguridad.handler.CustomAuthenticationSuccessHandler" />
+
+
+	<beans:bean id="customAuthenticationFailureHandler"
+		class="com.fac.seguridad.appweb.seguridad.handler.CustomAuthenticationFailureHandler" />
+
+	<beans:bean id="customerAccessDeniedHandler"
+		class="com.fac.seguridad.appweb.seguridad.handler.CustomerAccessDeniedHandler" />
+
+	<beans:bean id="accesoAuditoriaService"
+		class="com.fac.seguridad.accesoseguridadstateful.service.DefaultAccesoAuditoriaServiceImpl">
+	</beans:bean>
+
+	<beans:bean id="accesoAutenticacionService"
+		class="com.fac.seguridad.accesoseguridadstateful.service.DefaultAccesoAutenticacionServiceImpl">
+	</beans:bean>
+
+	<beans:bean id="accesoAutorizadorService"
+		class="com.fac.seguridad.accesoseguridadstateful.service.DefaultAccesoAutorizadorServiceImpl">
+	</beans:bean>
+
+</beans:beans>
